@@ -60,11 +60,13 @@ def client():
     for query in query_list:
 
         # Send Hostname being queried to RS
-        hostname = query
+        hostname = query.rstrip()
+        print(hostname)
         ls.sendall(hostname.encode())
+        time.sleep(random.random() * 5)
 
-    end_flag = "done"
-    ls.sendall(end_flag.encode())
+    end_flag = "EOD"
+    ls.send(end_flag.encode())
     ls.close()
     exit()
 

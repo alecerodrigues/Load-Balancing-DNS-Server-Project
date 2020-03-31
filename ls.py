@@ -92,10 +92,10 @@ def client_connection():
 
     # receives dns query as a string
     dns_query = ''
-    while dns_query != "done":
-        dns_query = str(csockid.recv(1024)).rstrip()
+    while dns_query != "EOD":
+        temp = str(csockid.recv(1024)).rstrip()
+        dns_query = temp
         print(dns_query)
-
 
     # Close the server socket
     ss.close()

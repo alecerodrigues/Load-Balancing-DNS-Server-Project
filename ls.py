@@ -90,6 +90,27 @@ def client_connection():
     msg = "[LS -> C]: Connected to LServer"
     csockid.send(msg.encode('utf-8'))
 
+    try:
+        ts1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print("[LS -> TS1]: LS to TS1 socket created")
+    except socket.error as err:
+        print('socket open error: {}\n'.format(err))
+        exit()
+
+    #TS stuff
+    port = ts1_listen_port()
+    name = ts1_hostname()
+    server_binding1 = (name, port)
+    ts1.connect(server_binding1)
+    host = ts1_hostname()
+    print("[LS -> TS1]: Server host name is {}".format(host))
+    localhost_ip = (socket.gethostbyname(host))
+    print("[LS -> TS1]: Server IP address is {}".format(localhost_ip))
+    ts1id, addr1 = ts1.accept()
+#########
+    print("[LS -> TS1]: Got a connection request from a client at {}".format(addr1))
+    confirm = str(ts1id.recv(1024)).rstrip()
+    print(confirm)
     # receives dns query as a string
     dns_query = ''
     while dns_query != "EOD":
@@ -100,6 +121,37 @@ def client_connection():
     # Close the server socket
     ss.close()
 
+
+def ts1_connection(dns_query):
+    """
+    This function starts the 1st Top-Level server and performs the DNS lookups.
+    :return: null
+    """
+    try:
+        ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print("[LS -> TS1]: LS to TS1 socket created")
+    except socket.error as err:
+        print('socket open error: {}\n'.format(err))
+        exit()
+
+    server_binding = ('', ts1_listen_port())
+    ss.bind(server_binding)
+    ss.listen(1)
+    host = ts1_hostname()
+    print("[LS -> TS1]: Server host name is {}".format(host))
+    localhost_ip = (socket.gethostbyname(host))
+    print("[LS -> TS1]: Server IP address is {}".format(localhost_ip))
+    csockid, addr = ss.accept()
+
+    print("[LS -> TS1]: Got a connection request from a client at {}".format(addr))
+
+    # send a intro message to the client.
+    msg = "[LS -> TS1]: Connected to LServer, sending query..."
+    csockid.send(msg.encode('utf-8'))
+    csockid.send(dns_query.encode())
+
+    # Close the server socket
+    ss.close()
 
 if __name__ == "__main__":
 

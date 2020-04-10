@@ -68,12 +68,14 @@ def ts1():
     csockid.send(msg.encode('utf-8'))
     dns_query = str(csockid.recv(1024)).rstrip()
     while dns_query != 'EOD':
+        # does there need to be a sleep here?
+        
         # receives hostname to be queried
-
-        if lookup(dns_query) == 'none':
-            csockid.send(dns_query + ' - Error:HOST NOT FOUND')
-        else:
+        # only send if nothing happens
+        if lookup(dns_query) != 'none':
             csockid.send(lookup(dns_query))
+
+        # should wait to recieve another query (at most 5 seconds)
         dns_query = str(csockid.recv(1024)).rstrip()
 
     # Close the server socket

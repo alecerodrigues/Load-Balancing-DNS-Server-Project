@@ -39,7 +39,7 @@ def ts2_listen_port():
     return int(arglist)
 
 
-def ts1():
+def ts2():
 
     # Initializes the LS -> Load Server connection
     try:
@@ -68,12 +68,11 @@ def ts1():
     csockid.send(msg.encode('utf-8'))
     dns_query = str(csockid.recv(1024)).rstrip()
     while dns_query != 'EOD':
+        # does there need to be a sleep here?
+        
         # receives hostname to be queried
-        time.sleep(random.random() * 5)
         # only send if nothing happens
-        if lookup(dns_query) == 'none':
-            csockid.send(dns_query + ' - Error:HOST NOT FOUND')
-        else:
+        if lookup(dns_query) != 'none':
             csockid.send(lookup(dns_query))
 
         # should wait to recieve another query (at most 5 seconds)
@@ -85,7 +84,7 @@ def ts1():
 
 if __name__ == "__main__":
     time.sleep(random.random() * 5)
-    t2 = threading.Thread(name='client', target=ts1())
+    t2 = threading.Thread(name='client', target=ts2())
     t2.start()
 
     time.sleep(5)

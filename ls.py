@@ -122,7 +122,7 @@ def client_connection():
     # Receive connect confirmation from TS1
     ts2_connect_conf = ts2.recv(100)
     print(ts1_connect_conf.decode('utf-8'))
-    ts1.settimeout(5)  # set timeout to 5 seconds of inactivity
+    ts2.settimeout(5)  # set timeout to 5 seconds of inactivity
 
     # Process dns query recieved as a string
     dns_query = str(csockid.recv(1024)).rstrip()
@@ -131,21 +131,35 @@ def client_connection():
         #send queried hostname to ts1
         ts1.send(dns_query)
         ts2.send(dns_query)
-        ts1_query_return = ''
+
+        did_ts1_timeout = False
+
         try:
             ts1_query_return = ts1.recv(100)
         except socket.timeout:
             print("[TS1 -> LS]: No Match Try TS2")
-        #if don't recieve a response in 5 secs send back error
+            did_ts1_timeout = True
 
+        # if we didn't timeout that means we got a query, get next query then go to top of loop
+        if not did_ts1_timeout:
+            csockid.send(ts1_query_return)
+            dns_query = str(csockid.recv(1024)).rstrip()
+            continue
+        
+        did_ts2_timeout = False
 
+        try:
+            ts2_query_return = ts2.recv(100)
+        except socket.timeout:
+            print("[TS2 -> LS]: No Match Try TS2")
+            did_ts2_timeout = True
+        
         ts2_query_return = ts2.recv(100)
 
-        if ts1_query_return == (dns_query + ' - Error:HOST NOT FOUND'):
+        # if we didn't timeout that means we got a query, get next query then go to top of loop
+        if not did_ts2_timeout:
             csockid.send(ts2_query_return)
-        #if ts2_query_return == (dns_query + ' - Error:HOST NOT FOUND'):
-        else:
-            csockid.send(ts1_query_return)
+
         dns_query = str(csockid.recv(1024)).rstrip()
 
     # Send EOD to TS1/TS2 (I don't think it hits in the loop)

@@ -90,6 +90,7 @@ def client_connection():
     msg = "[LS -> C]: Connected to LServer"
     csockid.send(msg.encode('utf-8'))
 
+    #Setup TS1 Connection
     try:
         ts1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("[LS -> TS1]: LS to TS1 socket created")
@@ -97,58 +98,35 @@ def client_connection():
         print('socket open error: {}\n'.format(err))
         exit()
 
-    #TS stuff
-    port = ts1_listen_port()
-    name = ts1_hostname()
-    server_binding1 = (name, port)
-    ts1.connect(server_binding1)
-    host = ts1_hostname()
-    print("[LS -> TS1]: Server host name is {}".format(host))
-    localhost_ip = (socket.gethostbyname(host))
-    print("[LS -> TS1]: Server IP address is {}".format(localhost_ip))
-    ts1id, addr1 = ts1.accept()
-#########
-    print("[LS -> TS1]: Got a connection request from a client at {}".format(addr1))
-    confirm = str(ts1id.recv(1024)).rstrip()
-    print(confirm)
-    # receives dns query as a string
-    dns_query = ''
+    ts1_binding = (ts1_hostname, ts1_listen_port())
+    ts1.connect(ts1_binding)
+
+    # Receive connect confirmation from TS1
+    ts1_connect_conf = ts1.recv(100)
+    print(ts1_connect_conf.decode('utf-8'))
+    ts1.settimeout(5) # set timeout to 5 seconds of inactivity
+
+    # Setup TS2 Connection (TODO Same as TS1 Though)
+
+    # Process dns query recieved as a string
+    dns_query = str(csockid.recv(1024)).rstrip()
+
     while dns_query != "EOD":
-        temp = str(csockid.recv(1024)).rstrip()
-        dns_query = temp
-        print(dns_query)
+        #send queried hostname to ts1
+        ts1.send(dns_query)
 
-    # Close the server socket
-    ss.close()
+        try:
+            ts1_query_return = ts1.recv(100)
+        except socket.timeout:
+            print("[TS1 -> LS]: No Match Try TS2")
+            
+        #if don't recieve a response in 5 secs send back error
 
+        dns_query = str(csockid.recv(1024)).rstrip()
 
-def ts1_connection(dns_query):
-    """
-    This function starts the 1st Top-Level server and performs the DNS lookups.
-    :return: null
-    """
-    try:
-        ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        print("[LS -> TS1]: LS to TS1 socket created")
-    except socket.error as err:
-        print('socket open error: {}\n'.format(err))
-        exit()
-
-    server_binding = ('', ts1_listen_port())
-    ss.bind(server_binding)
-    ss.listen(1)
-    host = ts1_hostname()
-    print("[LS -> TS1]: Server host name is {}".format(host))
-    localhost_ip = (socket.gethostbyname(host))
-    print("[LS -> TS1]: Server IP address is {}".format(localhost_ip))
-    csockid, addr = ss.accept()
-
-    print("[LS -> TS1]: Got a connection request from a client at {}".format(addr))
-
-    # send a intro message to the client.
-    msg = "[LS -> TS1]: Connected to LServer, sending query..."
-    csockid.send(msg.encode('utf-8'))
-    csockid.send(dns_query.encode())
+    # Send EOD to TS1/TS2 (I don't think it hits in the loop)
+    ts1.send(dns_query)
+    #ts2.send(dns_query)
 
     # Close the server socket
     ss.close()

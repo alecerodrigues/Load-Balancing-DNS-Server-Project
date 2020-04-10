@@ -48,6 +48,11 @@ def client():
     ls_connect_conf = ls.recv(100)
     print(ls_connect_conf.decode('utf-8'))
 
+    # Change the Working directory to where this python script is
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir(dname)
+
     # Generates the resolved hostname list
     if os.path.exists("RESOLVED.txt"):
         os.remove("RESOLVED.txt")
@@ -63,11 +68,11 @@ def client():
         hostname = query.rstrip()
         print(hostname)
         ls.sendall(hostname.encode())
-        time.sleep(random.random() * 5)
 
     end_flag = "EOD"
     ls.send(end_flag.encode())
     ls.close()
+
     exit()
 
 

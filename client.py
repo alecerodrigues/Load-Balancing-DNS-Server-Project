@@ -68,9 +68,6 @@ def client():
         hostname = query.rstrip()
         print(hostname)
         ls.sendall(hostname.encode())
-        return_query = ls.recv(100)
-        resolved_queries.write(return_query + '\n')
-       # time.sleep(random.random() * 5)
 
     end_flag = "EOD"
     ls.send(end_flag.encode())
@@ -83,4 +80,6 @@ if __name__ == "__main__":
     time.sleep(random.random() * 5)
     t2 = threading.Thread(name='client', target=client)
     t2.start()
+
     time.sleep(5)
+    print("Done. Output in RESOLVED.txt")

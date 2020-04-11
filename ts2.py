@@ -64,13 +64,17 @@ def ts2():
     print ("[TS2]: Got a connection request from a client at {}".format(addr))
 
     # send a intro message to the client.
-    msg = "[TS2]: Connected to TServer 2"
+    msg = "[TS1]: Connected to TServer 1"
     csockid.send(msg.encode('utf-8'))
     dns_query = str(csockid.recv(1024)).rstrip()
     while dns_query != 'EOD':
         # does there need to be a sleep here?
         
         # receives hostname to be queried
+<<<<<<< HEAD
+=======
+
+>>>>>>> parent of 24f19d0... T2 implemented.
         # only send if nothing happens
         if lookup(dns_query) != 'none':
             csockid.send(lookup(dns_query))

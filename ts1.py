@@ -88,3 +88,4 @@ if __name__ == "__main__":
     t2.start()
 
     time.sleep(5)
+    print("Done. Output in RESOLVED.txt")

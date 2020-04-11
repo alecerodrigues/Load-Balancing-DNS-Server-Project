@@ -97,8 +97,9 @@ def client_connection():
     except socket.error as err:
         print('socket open error: {}\n'.format(err))
         exit()
-
-    ts1_binding = (ts1_hostname, ts1_listen_port())
+    temp_host = ts1_hostname()
+    temp_port = ts1_listen_port()
+    ts1_binding = (temp_host, temp_port)
     ts1.connect(ts1_binding)
 
     # Receive connect confirmation from TS1
@@ -106,7 +107,6 @@ def client_connection():
     print(ts1_connect_conf.decode('utf-8'))
     ts1.settimeout(5) # set timeout to 5 seconds of inactivity
 
-<<<<<<< HEAD
     # Setup TS2 Connection
     try:
         ts2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -122,14 +122,7 @@ def client_connection():
     # Receive connect confirmation from TS1
     ts2_connect_conf = ts2.recv(100)
     print(ts1_connect_conf.decode('utf-8'))
-<<<<<<< HEAD
-    ts2.settimeout(5)  # set timeout to 5 seconds of inactivity
-=======
-    # Setup TS2 Connection (TODO Same as TS1 Though)
->>>>>>> parent of 24f19d0... T2 implemented.
-=======
     ts1.settimeout(5)  # set timeout to 5 seconds of inactivity
->>>>>>> parent of 43b1e56... Set Up Timeout in LS, Changed TS1, TS2
 
     # Process dns query recieved as a string
     dns_query = str(csockid.recv(1024)).rstrip()
@@ -137,50 +130,27 @@ def client_connection():
     while dns_query != "EOD":
         #send queried hostname to ts1
         ts1.send(dns_query)
-<<<<<<< HEAD
         ts2.send(dns_query)
-<<<<<<< HEAD
-
-        did_ts1_timeout = False
-=======
->>>>>>> parent of 24f19d0... T2 implemented.
-
-=======
         ts1_query_return = ''
->>>>>>> parent of 43b1e56... Set Up Timeout in LS, Changed TS1, TS2
         try:
             ts1_query_return = ts1.recv(100)
         except socket.timeout:
             print("[TS1 -> LS]: No Match Try TS2")
-<<<<<<< HEAD
-<<<<<<< HEAD
-            did_ts1_timeout = True
-=======
         #if don't recieve a response in 5 secs send back error
->>>>>>> parent of 43b1e56... Set Up Timeout in LS, Changed TS1, TS2
 
 
         ts2_query_return = ts2.recv(100)
 
         if ts1_query_return == (dns_query + ' - Error:HOST NOT FOUND'):
             csockid.send(ts2_query_return)
-<<<<<<< HEAD
-
-=======
-            
-        #if don't recieve a response in 5 secs send back error
-
->>>>>>> parent of 24f19d0... T2 implemented.
-=======
         #if ts2_query_return == (dns_query + ' - Error:HOST NOT FOUND'):
         else:
             csockid.send(ts1_query_return)
->>>>>>> parent of 43b1e56... Set Up Timeout in LS, Changed TS1, TS2
         dns_query = str(csockid.recv(1024)).rstrip()
 
     # Send EOD to TS1/TS2 (I don't think it hits in the loop)
     ts1.send(dns_query)
-    #ts2.send(dns_query)
+    ts2.send(dns_query)
 
     # Close the server socket
     ss.close()
